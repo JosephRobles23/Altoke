@@ -13,9 +13,9 @@ export const passwordSchema = z
   .regex(/[a-z]/, 'Debe contener al menos una minúscula')
   .regex(/[0-9]/, 'Debe contener al menos un número');
 
-export const hederaAccountIdSchema = z
+export const evmAddressSchema = z
   .string()
-  .regex(/^\d+\.\d+\.\d+$/, 'Account ID inválido. Formato: shard.realm.num');
+  .regex(/^0x[a-fA-F0-9]{40}$/, 'Dirección EVM inválida. Formato: 0x seguido de 40 hex chars');
 
 export const amountSchema = z
   .number()
@@ -32,7 +32,10 @@ export const phoneSchema = z
 /**
  * Valida datos y retorna resultado tipado
  */
-export function validate<T>(schema: z.ZodSchema<T>, data: unknown): {
+export function validate<T>(
+  schema: z.ZodSchema<T>,
+  data: unknown
+): {
   success: boolean;
   data?: T;
   errors?: Record<string, string[]>;

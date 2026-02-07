@@ -10,7 +10,8 @@ interface Transaction {
   currency: string;
   status: 'pending' | 'completed' | 'failed';
   description?: string;
-  hederaTxId?: string;
+  txHash?: string;
+  toAddress?: string;
   createdAt: string;
 }
 
@@ -19,10 +20,16 @@ interface TransactionListProps {
   showAll?: boolean;
 }
 
-const HEDERA_EXPLORER_URL = 'https://hashscan.io/testnet/transaction';
+const EXPLORER_BASE_URL =
+  process.env.NEXT_PUBLIC_BASESCAN_URL || 'https://sepolia.basescan.org';
 
-export function TransactionList({ transactions = [], showAll = false }: TransactionListProps) {
-  const displayTransactions = showAll ? transactions : transactions.slice(0, 5);
+export function TransactionList({
+  transactions = [],
+  showAll = false,
+}: TransactionListProps) {
+  const displayTransactions = showAll
+    ? transactions
+    : transactions.slice(0, 5);
 
   if (displayTransactions.length === 0) {
     return (
@@ -70,6 +77,11 @@ export function TransactionList({ transactions = [], showAll = false }: Transact
                   <p className="text-sm text-muted-foreground">
                     {new Date(tx.createdAt).toLocaleDateString('es-PE')}
                   </p>
+                  {tx.toAddress && (
+                    <p className="font-mono text-xs text-muted-foreground">
+                      {tx.toAddress.slice(0, 6)}...{tx.toAddress.slice(-4)}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -88,17 +100,21 @@ export function TransactionList({ transactions = [], showAll = false }: Transact
                           : 'text-yellow-600'
                     }`}
                   >
-                    {tx.status}
+                    {tx.status === 'completed'
+                      ? 'Completada'
+                      : tx.status === 'failed'
+                        ? 'Fallida'
+                        : 'Pendiente'}
                   </p>
                 </div>
 
-                {tx.hederaTxId && (
+                {tx.txHash && (
                   <a
-                    href={`${HEDERA_EXPLORER_URL}/${tx.hederaTxId}`}
+                    href={`${EXPLORER_BASE_URL}/tx/${tx.txHash}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-muted-foreground hover:text-foreground"
-                    aria-label="Ver en explorador de Hedera"
+                    aria-label="Ver en BaseScan"
                   >
                     <ExternalLink className="h-4 w-4" />
                   </a>

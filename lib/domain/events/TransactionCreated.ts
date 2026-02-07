@@ -4,7 +4,7 @@ export interface TransactionCreatedEvent {
     transactionId: string;
     fromUserId: string;
     toUserId?: string;
-    toAccountId?: string;
+    toAddress?: string;
     amountUsdc: number;
     timestamp: Date;
   };
@@ -14,7 +14,7 @@ export function createTransactionCreatedEvent(params: {
   transactionId: string;
   fromUserId: string;
   toUserId?: string;
-  toAccountId?: string;
+  toAddress?: string;
   amountUsdc: number;
 }): TransactionCreatedEvent {
   return {

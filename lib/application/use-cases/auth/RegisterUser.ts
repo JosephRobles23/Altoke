@@ -1,6 +1,5 @@
 import { User } from '@/lib/domain/entities/User';
 import { IUserRepository } from '@/lib/domain/repositories/IUserRepository';
-import { IWalletRepository } from '@/lib/domain/repositories/IWalletRepository';
 import { ValidationError } from '@/lib/shared/errors/AppError';
 
 export interface RegisterUserRequest {
@@ -12,14 +11,11 @@ export interface RegisterUserRequest {
 
 export interface RegisterUserResponse {
   userId: string;
-  walletAccountId: string;
+  walletAddress: string;
 }
 
 export class RegisterUserUseCase {
-  constructor(
-    private userRepo: IUserRepository,
-    private walletRepo: IWalletRepository
-  ) {}
+  constructor(private userRepo: IUserRepository) {}
 
   async execute(request: RegisterUserRequest): Promise<RegisterUserResponse> {
     // 1. Verificar que el email no esté registrado
@@ -41,13 +37,13 @@ export class RegisterUserUseCase {
 
     await this.userRepo.save(user);
 
-    // 3. Crear wallet (se implementará con Hedera)
-    // TODO: Integrar con CreateWallet use case
-    const walletAccountId = 'pending';
+    // 3. Crear wallet (se implementará con createWallet server action)
+    // El wallet se crea automáticamente al hacer login la primera vez
+    const walletAddress = 'pending';
 
     return {
       userId: user.id,
-      walletAccountId,
+      walletAddress,
     };
   }
 }

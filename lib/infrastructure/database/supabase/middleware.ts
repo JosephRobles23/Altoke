@@ -57,8 +57,8 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Refrescar la sesión si ha expirado
-  await supabase.auth.getUser();
+  // Refrescar la sesión si ha expirado y obtener usuario
+  const { data: { user } } = await supabase.auth.getUser();
 
-  return response;
+  return { response, user };
 }

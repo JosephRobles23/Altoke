@@ -31,7 +31,7 @@ export default function SettingsPage() {
         <div className="rounded-lg border p-6">
           <h2 className="mb-4 text-xl font-semibold">Wallet</h2>
           <p className="text-sm text-muted-foreground">
-            Información de tu wallet Hedera.
+            Información de tu wallet en Base.
           </p>
           {/* TODO: Info del wallet */}
         </div>

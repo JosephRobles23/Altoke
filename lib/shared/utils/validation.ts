@@ -11,10 +11,10 @@ export function isValidEmail(email: string): boolean {
 }
 
 /**
- * Verifica si un string es un Account ID de Hedera válido
+ * Verifica si un string es una dirección EVM válida
  */
-export function isValidHederaAccountId(accountId: string): boolean {
-  return /^\d+\.\d+\.\d+$/.test(accountId);
+export function isValidEVMAddress(address: string): boolean {
+  return /^0x[a-fA-F0-9]{40}$/.test(address);
 }
 
 /**
@@ -34,7 +34,9 @@ export function sanitizeInput(input: string): string {
 /**
  * Verifica la fortaleza de una contraseña
  */
-export function getPasswordStrength(password: string): 'weak' | 'medium' | 'strong' {
+export function getPasswordStrength(
+  password: string
+): 'weak' | 'medium' | 'strong' {
   let score = 0;
 
   if (password.length >= 8) score++;

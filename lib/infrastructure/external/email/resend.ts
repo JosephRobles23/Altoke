@@ -1,14 +1,16 @@
+import { Resend } from 'resend';
+
 /**
  * Servicio de email usando Resend
  * Documentación: https://resend.com/docs
  */
 export class ResendEmailService {
-  private apiKey: string;
+  private resend: Resend;
   private fromEmail: string;
 
   constructor() {
-    this.apiKey = process.env.RESEND_API_KEY || '';
-    this.fromEmail = 'noreply@altoke.app';
+    this.resend = new Resend(process.env.RESEND_API_KEY);
+    this.fromEmail = 'Altoke <admin@altoke.tech>';
   }
 
   async sendEmail(params: {
@@ -16,16 +18,17 @@ export class ResendEmailService {
     subject: string;
     html: string;
   }): Promise<void> {
-    // TODO: Implementar con Resend SDK
-    // const resend = new Resend(this.apiKey);
-    // await resend.emails.send({
-    //   from: this.fromEmail,
-    //   to: params.to,
-    //   subject: params.subject,
-    //   html: params.html,
-    // });
+    const { error } = await this.resend.emails.send({
+      from: this.fromEmail,
+      to: params.to,
+      subject: params.subject,
+      html: params.html,
+    });
 
-    console.warn(`[Email] Sending to ${params.to}: ${params.subject}`);
+    if (error) {
+      console.error('[Email] Error enviando email:', error);
+      throw new Error(`Error enviando email: ${error.message}`);
+    }
   }
 
   async sendWelcomeEmail(to: string, fullName: string): Promise<void> {
@@ -45,6 +48,9 @@ export class ResendEmailService {
     amount: number,
     txHash: string
   ): Promise<void> {
+    const explorerUrl =
+      process.env.NEXT_PUBLIC_BASESCAN_URL || 'https://sepolia.basescan.org';
+
     await this.sendEmail({
       to,
       subject: 'Transacción completada - Altoke',
@@ -52,7 +58,7 @@ export class ResendEmailService {
         <h1>Transacción Completada</h1>
         <p>Tu transferencia de $${amount.toFixed(2)} USDC ha sido procesada exitosamente.</p>
         <p>Hash de transacción: <code>${txHash}</code></p>
-        <p><a href="https://hashscan.io/testnet/transaction/${txHash}">Ver en explorador</a></p>
+        <p><a href="${explorerUrl}/tx/${txHash}">Ver en BaseScan</a></p>
       `,
     });
   }

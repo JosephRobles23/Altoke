@@ -1,6 +1,24 @@
 import { TransactionList } from '@/components/dashboard/TransactionList';
+import { getTransactionHistory } from '@/app/actions/transaction';
 
-export default function TransactionsPage() {
+export default async function TransactionsPage() {
+  const txResult = await getTransactionHistory();
+
+  const transactions =
+    txResult.success && txResult.data
+      ? (txResult.data.transactions as Array<{
+          id: string;
+          type: 'send' | 'receive' | 'buy' | 'sell';
+          amount: number;
+          currency: string;
+          status: 'pending' | 'completed' | 'failed';
+          description?: string;
+          txHash?: string;
+          toAddress?: string;
+          createdAt: string;
+        }>)
+      : [];
+
   return (
     <div className="space-y-6">
       <div>
@@ -10,7 +28,7 @@ export default function TransactionsPage() {
         </p>
       </div>
 
-      <TransactionList showAll />
+      <TransactionList transactions={transactions} showAll />
     </div>
   );
 }

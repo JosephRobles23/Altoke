@@ -4,15 +4,15 @@ import { IWalletRepository } from '@/lib/domain/repositories/IWalletRepository';
 /**
  * Application Service para operaciones de wallet
  */
-export class WalletService {
+export class WalletAppService {
   constructor(private walletRepo: IWalletRepository) {}
 
   async getWalletByUser(userId: string): Promise<Wallet | null> {
     return this.walletRepo.findByUserId(userId);
   }
 
-  async getWalletByAccount(accountId: string): Promise<Wallet | null> {
-    return this.walletRepo.findByAccountId(accountId);
+  async getWalletByAddress(address: string): Promise<Wallet | null> {
+    return this.walletRepo.findByAddress(address);
   }
 
   async updateBalance(walletId: string, balance: Balance): Promise<void> {

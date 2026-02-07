@@ -4,7 +4,7 @@
 
 export const APP_CONFIG = {
   name: 'Altoke',
-  description: 'Plataforma de remesas USD → PEN con Hedera Hashgraph',
+  description: 'Plataforma de remesas USD → PEN con Base (Coinbase L2)',
   version: '0.1.0',
   url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
 } as const;
@@ -16,9 +16,10 @@ export const AUTH_CONFIG = {
   lockoutDurationMs: 15 * 60 * 1000, // 15 min
 } as const;
 
-export const HEDERA_CONFIG = {
-  network: (process.env.HEDERA_NETWORK || 'testnet') as 'testnet' | 'mainnet',
-  initialBalance: 10, // HBAR para nuevas cuentas en testnet
+export const BASE_CONFIG = {
+  network: (process.env.NEXT_PUBLIC_BASE_NETWORK || 'base-sepolia') as
+    | 'base-sepolia'
+    | 'base',
   usdcDecimals: 6,
 } as const;
 

@@ -60,7 +60,7 @@ export default function LandingPage() {
               <div className="mb-4 text-4xl">⚡</div>
               <h4 className="mb-2 text-xl font-semibold">Rápido</h4>
               <p className="text-muted-foreground">
-                Transferencias en segundos gracias a Hedera Hashgraph.
+                Transferencias en segundos gracias a Base (Coinbase L2).
               </p>
             </div>
             <div className="rounded-lg border p-6 text-center">

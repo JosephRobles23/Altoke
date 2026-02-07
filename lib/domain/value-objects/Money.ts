@@ -16,8 +16,8 @@ export class Money {
     return new Money(amount, 'PEN');
   }
 
-  static fromHBAR(amount: number): Money {
-    return new Money(amount, 'HBAR');
+  static fromETH(amount: number): Money {
+    return new Money(amount, 'ETH');
   }
 
   add(other: Money): Money {
@@ -56,12 +56,17 @@ export class Money {
     if (this.currency === 'USDC' || this.currency === 'USD') {
       return `$${this.value.toFixed(2)}`;
     }
+    if (this.currency === 'ETH') {
+      return `${this.value.toFixed(6)} ETH`;
+    }
     return `${this.value.toFixed(4)} ${this.currency}`;
   }
 
   private ensureSameCurrency(other: Money): void {
     if (this.currency !== other.currency) {
-      throw new Error(`Cannot operate on different currencies: ${this.currency} vs ${other.currency}`);
+      throw new Error(
+        `Cannot operate on different currencies: ${this.currency} vs ${other.currency}`
+      );
     }
   }
 }

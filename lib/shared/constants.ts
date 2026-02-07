@@ -2,10 +2,10 @@
  * Constantes de la aplicación
  */
 
-// Hedera
-export const HEDERA_EXPLORER_BASE_URL = {
-  testnet: 'https://hashscan.io/testnet',
-  mainnet: 'https://hashscan.io/mainnet',
+// Base (Blockchain)
+export const BASE_EXPLORER_URL = {
+  'base-sepolia': 'https://sepolia.basescan.org',
+  base: 'https://basescan.org',
 } as const;
 
 // Transacciones
@@ -26,7 +26,7 @@ export const KYC_LEVELS = {
 
 // Monedas soportadas
 export const SUPPORTED_FIAT_CURRENCIES = ['USD', 'PEN'] as const;
-export const SUPPORTED_CRYPTO_CURRENCIES = ['USDC', 'HBAR'] as const;
+export const SUPPORTED_CRYPTO_CURRENCIES = ['USDC', 'ETH'] as const;
 
 // Paginación
 export const DEFAULT_PAGE_SIZE = 20;

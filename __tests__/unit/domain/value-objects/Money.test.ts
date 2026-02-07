@@ -14,6 +14,12 @@ describe('Money Value Object', () => {
     expect(money.currency).toBe('PEN');
   });
 
+  it('should create ETH money', () => {
+    const money = Money.fromETH(0.5);
+    expect(money.value).toBe(0.5);
+    expect(money.currency).toBe('ETH');
+  });
+
   it('should add same currency', () => {
     const a = Money.fromUSDC(100);
     const b = Money.fromUSDC(50);
@@ -24,7 +30,9 @@ describe('Money Value Object', () => {
   it('should throw when adding different currencies', () => {
     const usd = Money.fromUSDC(100);
     const pen = Money.fromPEN(50);
-    expect(() => usd.add(pen)).toThrow('Cannot operate on different currencies');
+    expect(() => usd.add(pen)).toThrow(
+      'Cannot operate on different currencies'
+    );
   });
 
   it('should subtract same currency', () => {
@@ -41,7 +49,9 @@ describe('Money Value Object', () => {
   });
 
   it('should not allow negative values', () => {
-    expect(() => Money.fromUSDC(-10)).toThrow('Money value cannot be negative');
+    expect(() => Money.fromUSDC(-10)).toThrow(
+      'Money value cannot be negative'
+    );
   });
 
   it('should compare values correctly', () => {
@@ -55,6 +65,6 @@ describe('Money Value Object', () => {
   it('should format correctly', () => {
     expect(Money.fromUSDC(100).format()).toBe('$100.00');
     expect(Money.fromPEN(372.5).format()).toBe('S/ 372.50');
-    expect(Money.fromHBAR(10.1234).format()).toBe('10.1234 HBAR');
+    expect(Money.fromETH(0.5).format()).toBe('0.500000 ETH');
   });
 });

@@ -4,6 +4,6 @@ export interface ITransactionRepository {
   save(transaction: Transaction): Promise<void>;
   findById(id: string): Promise<Transaction | null>;
   findByUserId(userId: string, limit?: number): Promise<Transaction[]>;
-  findByHederaTxId(txId: string): Promise<Transaction | null>;
+  findByTxHash(txHash: string): Promise<Transaction | null>;
   update(transaction: Transaction): Promise<void>;
 }

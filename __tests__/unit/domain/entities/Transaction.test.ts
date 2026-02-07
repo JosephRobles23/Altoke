@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { Transaction, TransactionStatus } from '@/lib/domain/entities/Transaction';
+import {
+  Transaction,
+  TransactionStatus,
+} from '@/lib/domain/entities/Transaction';
 
 describe('Transaction Entity', () => {
   it('should create a pending transaction', () => {
@@ -23,10 +26,12 @@ describe('Transaction Entity', () => {
       amount: { value: 100, currency: 'USDC' },
     });
 
-    const completedTx = tx.markAsCompleted('0xTxHash123');
+    const completedTx = tx.markAsCompleted('0xTxHash123', 12345, 21000);
 
     expect(completedTx.status).toBe(TransactionStatus.Completed);
-    expect(completedTx.hederaTxHash).toBe('0xTxHash123');
+    expect(completedTx.txHash).toBe('0xTxHash123');
+    expect(completedTx.blockNumber).toBe(12345);
+    expect(completedTx.gasUsed).toBe(21000);
     expect(completedTx.id).toBe(tx.id);
     expect(completedTx.completedAt).toBeDefined();
   });
@@ -81,5 +86,17 @@ describe('Transaction Entity', () => {
 
     expect(tx.amountPen).toBe(372);
     expect(tx.exchangeRate).toBe(3.72);
+  });
+
+  it('should store toAddress for EVM addresses', () => {
+    const tx = Transaction.create({
+      fromUserId: 'user-1',
+      toAddress: '0x1234567890abcdef1234567890abcdef12345678',
+      amount: { value: 50, currency: 'USDC' },
+    });
+
+    expect(tx.toAddress).toBe(
+      '0x1234567890abcdef1234567890abcdef12345678'
+    );
   });
 });

@@ -1,21 +1,24 @@
-export default function BuyPage() {
+import { BuyUSDCWidget } from '@/components/onramp/BuyUSDCWidget';
+import { getWallet } from '@/app/actions/wallet';
+import { redirect } from 'next/navigation';
+
+export default async function BuyPage() {
+  const walletResult = await getWallet();
+
+  if (!walletResult.success || !walletResult.data) {
+    redirect('/dashboard');
+  }
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Comprar USDC</h1>
         <p className="text-muted-foreground">
-          Compra USDC con tarjeta de crédito o débito a través de Transak
+          Compra USDC con tarjeta de crédito/débito a través de Coinbase
         </p>
       </div>
 
-      <div className="rounded-lg border p-6">
-        {/* Widget de Transak se cargará aquí */}
-        <div id="transak-widget" className="min-h-[500px]">
-          <p className="text-center text-muted-foreground">
-            Cargando widget de Transak...
-          </p>
-        </div>
-      </div>
+      <BuyUSDCWidget address={walletResult.data!.address as string} />
     </div>
   );
 }

@@ -1,34 +1,27 @@
 import { Wallet } from '@/lib/domain/entities/Wallet';
 import { IWalletRepository } from '@/lib/domain/repositories/IWalletRepository';
 
-export interface IBlockchainAccountService {
-  createAccount(): Promise<{
-    accountId: string;
-    publicKey: string;
-    privateKey: string;
-  }>;
-}
-
-export interface IEncryptionService {
-  encryptPrivateKey(privateKey: string, masterPassword: string): string;
+export interface IBlockchainWalletService {
+  createWallet(masterPassword: string): {
+    address: string;
+    privateKeyEncrypted: string;
+  };
 }
 
 export interface CreateWalletRequest {
   userId: string;
-  network?: 'testnet' | 'mainnet';
+  network?: 'base-sepolia' | 'base';
 }
 
 export interface CreateWalletResponse {
   walletId: string;
-  accountId: string;
-  publicKey: string;
+  address: string;
 }
 
 export class CreateWalletUseCase {
   constructor(
     private walletRepo: IWalletRepository,
-    private blockchainService: IBlockchainAccountService,
-    private encryptionService: IEncryptionService,
+    private blockchainService: IBlockchainWalletService,
     private masterPassword: string
   ) {}
 
@@ -39,31 +32,23 @@ export class CreateWalletUseCase {
       throw new Error('User already has a wallet');
     }
 
-    // 2. Crear cuenta en Hedera
-    const account = await this.blockchainService.createAccount();
+    // 2. Crear wallet EVM con viem
+    const newWallet = this.blockchainService.createWallet(this.masterPassword);
 
-    // 3. Encriptar private key
-    const encryptedKey = this.encryptionService.encryptPrivateKey(
-      account.privateKey,
-      this.masterPassword
-    );
-
-    // 4. Guardar wallet en base de datos
+    // 3. Guardar wallet en base de datos
     const wallet = Wallet.create({
       userId: request.userId,
-      accountId: account.accountId,
-      publicKey: account.publicKey,
-      privateKeyEncrypted: encryptedKey,
-      balance: { hbar: 0, usdc: 0 },
-      network: request.network || 'testnet',
+      address: newWallet.address,
+      privateKeyEncrypted: newWallet.privateKeyEncrypted,
+      balance: { eth: 0, usdc: 0 },
+      network: request.network || 'base-sepolia',
     });
 
     await this.walletRepo.save(wallet);
 
     return {
       walletId: wallet.id,
-      accountId: wallet.accountId,
-      publicKey: wallet.publicKey,
+      address: wallet.address,
     };
   }
 }

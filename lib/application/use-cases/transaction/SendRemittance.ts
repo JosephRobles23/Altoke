@@ -1,30 +1,39 @@
-import { Transaction, TransactionType } from '@/lib/domain/entities/Transaction';
+import {
+  Transaction,
+  TransactionType,
+} from '@/lib/domain/entities/Transaction';
 import { ITransactionRepository } from '@/lib/domain/repositories/ITransactionRepository';
 import { IWalletRepository } from '@/lib/domain/repositories/IWalletRepository';
-import { InsufficientFundsError, ValidationError } from '@/lib/shared/errors/AppError';
+import {
+  InsufficientFundsError,
+  ValidationError,
+} from '@/lib/shared/errors/AppError';
 
-export interface IBlockchainClient {
-  sendTransaction(params: {
-    from: string;
-    to: string;
-    amount: number;
-    privateKey: string;
-    tokenId: string;
-  }): Promise<string>;
-}
-
-export interface INotificationService {
-  sendTransactionNotification(transaction: Transaction): Promise<void>;
+export interface IBlockchainTransferService {
+  transfer(
+    fromPrivateKey: string,
+    toAddress: string,
+    amount: number
+  ): Promise<{
+    txHash: string;
+    blockNumber: bigint;
+    gasUsed: bigint;
+  }>;
+  getBalance(address: string): Promise<number>;
 }
 
 export interface IEncryptionDecryptService {
   decryptPrivateKey(encryptedData: string, masterPassword: string): string;
 }
 
+export interface INotificationService {
+  sendTransactionNotification(transaction: Transaction): Promise<void>;
+}
+
 export interface SendRemittanceRequest {
   fromUserId: string;
   toUserId?: string;
-  toAccountId: string;
+  toAddress: string;
   amount: { value: number; currency: string };
   exchangeRate?: number;
   description?: string;
@@ -39,14 +48,15 @@ export class SendRemittanceUseCase {
   constructor(
     private transactionRepo: ITransactionRepository,
     private walletRepo: IWalletRepository,
-    private blockchainClient: IBlockchainClient,
+    private blockchainService: IBlockchainTransferService,
     private notificationService: INotificationService,
     private encryptionService: IEncryptionDecryptService,
-    private masterPassword: string,
-    private usdcTokenId: string
+    private masterPassword: string
   ) {}
 
-  async execute(request: SendRemittanceRequest): Promise<SendRemittanceResponse> {
+  async execute(
+    request: SendRemittanceRequest
+  ): Promise<SendRemittanceResponse> {
     // 1. Validar que el usuario tenga fondos
     const wallet = await this.walletRepo.findByUserId(request.fromUserId);
     if (!wallet) {
@@ -65,7 +75,7 @@ export class SendRemittanceUseCase {
     const transaction = Transaction.create({
       fromUserId: request.fromUserId,
       toUserId: request.toUserId,
-      toAccountId: request.toAccountId,
+      toAddress: request.toAddress,
       amount: request.amount,
       type: TransactionType.Send,
       exchangeRate: request.exchangeRate,
@@ -80,32 +90,38 @@ export class SendRemittanceUseCase {
         this.masterPassword
       );
 
-      // 4. Ejecutar transferencia en blockchain
-      const txHash = await this.blockchainClient.sendTransaction({
-        from: wallet.accountId,
-        to: request.toAccountId,
-        amount: request.amount.value,
+      // 4. Ejecutar transferencia USDC en Base
+      const result = await this.blockchainService.transfer(
         privateKey,
-        tokenId: this.usdcTokenId,
-      });
+        request.toAddress,
+        request.amount.value
+      );
 
       // 5. Actualizar transacción
-      const completedTx = transaction.markAsCompleted(txHash);
+      const completedTx = transaction.markAsCompleted(
+        result.txHash,
+        Number(result.blockNumber),
+        Number(result.gasUsed)
+      );
       await this.transactionRepo.update(completedTx);
 
       // 6. Actualizar balances
+      const newBalance = await this.blockchainService.getBalance(
+        wallet.address
+      );
       await this.walletRepo.updateBalance(wallet.id, {
-        hbar: wallet.balance.hbar,
-        usdc: wallet.balance.usdc - request.amount.value,
+        eth: wallet.balance.eth,
+        usdc: newBalance,
       });
 
       // 7. Notificar
       await this.notificationService.sendTransactionNotification(completedTx);
 
-      return { transactionId: completedTx.id, txHash };
+      return { transactionId: completedTx.id, txHash: result.txHash };
     } catch (error) {
       // Marcar como fallida
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       const failedTx = transaction.markAsFailed(errorMessage);
       await this.transactionRepo.update(failedTx);
       throw error;

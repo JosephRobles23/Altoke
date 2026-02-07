@@ -3,7 +3,7 @@ export interface WalletCreatedEvent {
   payload: {
     walletId: string;
     userId: string;
-    accountId: string;
+    address: string;
     network: string;
     timestamp: Date;
   };
@@ -12,7 +12,7 @@ export interface WalletCreatedEvent {
 export function createWalletCreatedEvent(params: {
   walletId: string;
   userId: string;
-  accountId: string;
+  address: string;
   network: string;
 }): WalletCreatedEvent {
   return {

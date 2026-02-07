@@ -1,15 +1,39 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Wallet } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Wallet, Copy, ExternalLink, Check } from 'lucide-react';
+import { useState } from 'react';
 
 interface BalanceCardProps {
-  hbar?: number;
+  eth?: number;
   usdc?: number;
-  accountId?: string;
+  address?: string;
+  network?: string;
 }
 
-export function BalanceCard({ hbar = 0, usdc = 0, accountId }: BalanceCardProps) {
+const EXPLORER_BASE_URL =
+  process.env.NEXT_PUBLIC_BASESCAN_URL || 'https://sepolia.basescan.org';
+
+export function BalanceCard({
+  eth = 0,
+  usdc = 0,
+  address,
+  network,
+}: BalanceCardProps) {
+  const [copied, setCopied] = useState(false);
+
+  const truncatedAddress = address
+    ? `${address.slice(0, 6)}...${address.slice(-4)}`
+    : '';
+
+  const handleCopy = async () => {
+    if (!address) return;
+    await navigator.clipboard.writeText(address);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <Card className="col-span-1 lg:col-span-2">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -18,9 +42,43 @@ export function BalanceCard({ hbar = 0, usdc = 0, accountId }: BalanceCardProps)
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {accountId && (
+          {address && (
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground">
+                Dirección:{' '}
+                <span className="font-mono">{truncatedAddress}</span>
+              </p>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-5 w-5"
+                onClick={handleCopy}
+                title="Copiar dirección completa"
+              >
+                {copied ? (
+                  <Check className="h-3 w-3 text-green-600" />
+                ) : (
+                  <Copy className="h-3 w-3" />
+                )}
+              </Button>
+              <a
+                href={`${EXPLORER_BASE_URL}/address/${address}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground"
+                title="Ver en BaseScan"
+              >
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+          )}
+
+          {network && (
             <p className="text-xs text-muted-foreground">
-              Account ID: <span className="font-mono">{accountId}</span>
+              Red:{' '}
+              <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
+                {network}
+              </span>
             </p>
           )}
 
@@ -30,8 +88,8 @@ export function BalanceCard({ hbar = 0, usdc = 0, accountId }: BalanceCardProps)
               <p className="text-2xl font-bold">${usdc.toFixed(2)}</p>
             </div>
             <div className="rounded-lg bg-muted/50 p-4">
-              <p className="text-sm text-muted-foreground">HBAR</p>
-              <p className="text-2xl font-bold">{hbar.toFixed(4)}</p>
+              <p className="text-sm text-muted-foreground">ETH (gas)</p>
+              <p className="text-2xl font-bold">{eth.toFixed(6)}</p>
             </div>
           </div>
         </div>

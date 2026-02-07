@@ -1,7 +1,11 @@
 import { LoginForm } from '@/components/auth/LoginForm';
 import Link from 'next/link';
 
-export default function LoginPage() {
+export default function LoginPage({
+  searchParams,
+}: {
+  searchParams: { error?: string };
+}) {
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -10,6 +14,12 @@ export default function LoginPage() {
           Ingresa tus credenciales para acceder a tu cuenta
         </p>
       </div>
+
+      {searchParams.error && (
+        <div className="rounded-md bg-destructive/10 p-3 text-center text-sm text-destructive">
+          {searchParams.error}
+        </div>
+      )}
 
       <LoginForm />
 

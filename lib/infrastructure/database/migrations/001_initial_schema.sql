@@ -1,5 +1,6 @@
 -- ============================================
 -- ALTOKE MVP - Migración inicial
+-- Arquitectura: Base (Coinbase L2) + Coinbase CDP
 -- ============================================
 
 -- PROFILES TABLE
@@ -20,13 +21,12 @@ CREATE TABLE public.profiles (
 CREATE TABLE public.wallets (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  account_id TEXT NOT NULL UNIQUE,
-  public_key TEXT NOT NULL,
+  address TEXT NOT NULL UNIQUE,
   private_key_encrypted TEXT NOT NULL,
-  balance_hbar NUMERIC(20, 8) NOT NULL DEFAULT 0,
+  balance_eth NUMERIC(20, 18) NOT NULL DEFAULT 0,
   balance_usdc NUMERIC(20, 8) NOT NULL DEFAULT 0,
   is_active BOOLEAN NOT NULL DEFAULT true,
-  network TEXT NOT NULL DEFAULT 'testnet' CHECK (network IN ('testnet', 'mainnet')),
+  network TEXT NOT NULL DEFAULT 'base-sepolia' CHECK (network IN ('base-sepolia', 'base')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT one_wallet_per_user UNIQUE (user_id, network)
@@ -37,7 +37,7 @@ CREATE TABLE public.transactions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   from_user_id UUID NOT NULL REFERENCES public.profiles(id),
   to_user_id UUID REFERENCES public.profiles(id),
-  to_account_id TEXT,
+  to_address TEXT,
   type TEXT NOT NULL CHECK (type IN ('send', 'receive', 'buy', 'sell')),
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'failed', 'cancelled')),
   
@@ -48,10 +48,10 @@ CREATE TABLE public.transactions (
   fee_usdc NUMERIC(20, 8) NOT NULL DEFAULT 0,
   fee_platform NUMERIC(20, 8) NOT NULL DEFAULT 0,
   
-  -- Blockchain data
-  hedera_tx_id TEXT UNIQUE,
-  hedera_tx_hash TEXT,
-  consensus_timestamp TEXT,
+  -- Blockchain data (Base / EVM)
+  tx_hash TEXT UNIQUE,
+  block_number BIGINT,
+  gas_used BIGINT,
   
   -- Metadata
   description TEXT,
@@ -64,23 +64,21 @@ CREATE TABLE public.transactions (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   
   -- Constraints
-  CONSTRAINT valid_amount CHECK (amount_usdc > 0),
-  CONSTRAINT valid_to CHECK (
-    (to_user_id IS NOT NULL AND to_account_id IS NULL) OR
-    (to_user_id IS NULL AND to_account_id IS NOT NULL)
-  )
+  CONSTRAINT valid_amount CHECK (amount_usdc > 0)
 );
 
 -- ONRAMP_TRANSACTIONS TABLE
 CREATE TABLE public.onramp_transactions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id),
-  provider TEXT NOT NULL CHECK (provider IN ('transak', 'ramp', 'moonpay')),
-  provider_order_id TEXT UNIQUE NOT NULL,
+  wallet_id UUID REFERENCES public.wallets(id),
+  provider TEXT NOT NULL DEFAULT 'coinbase' CHECK (provider IN ('coinbase')),
+  provider_order_id TEXT,
+  provider_tx_id TEXT,
   
   -- Amounts
   fiat_amount NUMERIC(20, 2) NOT NULL,
-  fiat_currency TEXT NOT NULL,
+  fiat_currency TEXT NOT NULL DEFAULT 'USD',
   crypto_amount NUMERIC(20, 8),
   crypto_currency TEXT NOT NULL DEFAULT 'USDC',
   
@@ -128,12 +126,12 @@ CREATE TABLE public.notifications (
 -- INDEXES
 -- ============================================
 CREATE INDEX idx_wallets_user_id ON public.wallets(user_id);
-CREATE INDEX idx_wallets_account_id ON public.wallets(account_id);
+CREATE INDEX idx_wallets_address ON public.wallets(address);
 CREATE INDEX idx_transactions_from_user ON public.transactions(from_user_id);
 CREATE INDEX idx_transactions_to_user ON public.transactions(to_user_id);
 CREATE INDEX idx_transactions_status ON public.transactions(status);
 CREATE INDEX idx_transactions_created_at ON public.transactions(created_at DESC);
-CREATE INDEX idx_transactions_hedera_tx_id ON public.transactions(hedera_tx_id);
+CREATE INDEX idx_transactions_tx_hash ON public.transactions(tx_hash);
 CREATE INDEX idx_onramp_user_id ON public.onramp_transactions(user_id);
 CREATE INDEX idx_onramp_status ON public.onramp_transactions(status);
 CREATE INDEX idx_notifications_user_id ON public.notifications(user_id, is_read);
@@ -147,18 +145,30 @@ ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.onramp_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
--- Profiles: usuarios solo pueden ver/editar su propio perfil
+-- Profiles: usuarios solo pueden ver/editar/crear su propio perfil
 CREATE POLICY "Users can view own profile"
   ON public.profiles FOR SELECT
   USING (auth.uid() = id);
+
+CREATE POLICY "Users can insert own profile"
+  ON public.profiles FOR INSERT
+  WITH CHECK (auth.uid() = id);
 
 CREATE POLICY "Users can update own profile"
   ON public.profiles FOR UPDATE
   USING (auth.uid() = id);
 
--- Wallets: usuarios solo pueden ver su propio wallet
+-- Wallets: usuarios solo pueden ver/crear/actualizar su propio wallet
 CREATE POLICY "Users can view own wallet"
   ON public.wallets FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create own wallet"
+  ON public.wallets FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own wallet"
+  ON public.wallets FOR UPDATE
   USING (auth.uid() = user_id);
 
 -- Transactions: usuarios pueden ver transacciones donde participan

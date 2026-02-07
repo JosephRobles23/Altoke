@@ -19,7 +19,7 @@ export interface TransactionProps {
   id: string;
   fromUserId: string;
   toUserId?: string;
-  toAccountId?: string;
+  toAddress?: string;
   type: TransactionType;
   status: TransactionStatus;
   amountUsdc: number;
@@ -27,9 +27,9 @@ export interface TransactionProps {
   exchangeRate?: number;
   feeUsdc: number;
   feePlatform: number;
-  hederaTxId?: string;
-  hederaTxHash?: string;
-  consensusTimestamp?: string;
+  txHash?: string;
+  blockNumber?: number;
+  gasUsed?: number;
   description?: string;
   metadata?: Record<string, unknown>;
   errorMessage?: string;
@@ -42,7 +42,7 @@ export class Transaction {
   public readonly id: string;
   public readonly fromUserId: string;
   public readonly toUserId?: string;
-  public readonly toAccountId?: string;
+  public readonly toAddress?: string;
   public readonly type: TransactionType;
   public readonly status: TransactionStatus;
   public readonly amountUsdc: number;
@@ -50,9 +50,9 @@ export class Transaction {
   public readonly exchangeRate?: number;
   public readonly feeUsdc: number;
   public readonly feePlatform: number;
-  public readonly hederaTxId?: string;
-  public readonly hederaTxHash?: string;
-  public readonly consensusTimestamp?: string;
+  public readonly txHash?: string;
+  public readonly blockNumber?: number;
+  public readonly gasUsed?: number;
   public readonly description?: string;
   public readonly metadata?: Record<string, unknown>;
   public readonly errorMessage?: string;
@@ -61,11 +61,10 @@ export class Transaction {
   public readonly updatedAt: Date;
 
   constructor(props: TransactionProps) {
-    Object.assign(this, props);
     this.id = props.id;
     this.fromUserId = props.fromUserId;
     this.toUserId = props.toUserId;
-    this.toAccountId = props.toAccountId;
+    this.toAddress = props.toAddress;
     this.type = props.type;
     this.status = props.status;
     this.amountUsdc = props.amountUsdc;
@@ -73,9 +72,9 @@ export class Transaction {
     this.exchangeRate = props.exchangeRate;
     this.feeUsdc = props.feeUsdc;
     this.feePlatform = props.feePlatform;
-    this.hederaTxId = props.hederaTxId;
-    this.hederaTxHash = props.hederaTxHash;
-    this.consensusTimestamp = props.consensusTimestamp;
+    this.txHash = props.txHash;
+    this.blockNumber = props.blockNumber;
+    this.gasUsed = props.gasUsed;
     this.description = props.description;
     this.metadata = props.metadata;
     this.errorMessage = props.errorMessage;
@@ -88,15 +87,21 @@ export class Transaction {
     return this.status === TransactionStatus.Pending;
   }
 
-  markAsCompleted(txHash: string, hederaTxId?: string): Transaction {
-    if (this.status !== TransactionStatus.Pending && this.status !== TransactionStatus.Processing) {
-      throw new Error('Only pending or processing transactions can be completed');
+  markAsCompleted(txHash: string, blockNumber?: number, gasUsed?: number): Transaction {
+    if (
+      this.status !== TransactionStatus.Pending &&
+      this.status !== TransactionStatus.Processing
+    ) {
+      throw new Error(
+        'Only pending or processing transactions can be completed'
+      );
     }
     return new Transaction({
       ...this.toProps(),
       status: TransactionStatus.Completed,
-      hederaTxHash: txHash,
-      hederaTxId: hederaTxId || this.hederaTxId,
+      txHash,
+      blockNumber,
+      gasUsed,
       completedAt: new Date(),
       updatedAt: new Date(),
     });
@@ -131,7 +136,7 @@ export class Transaction {
       id: this.id,
       fromUserId: this.fromUserId,
       toUserId: this.toUserId,
-      toAccountId: this.toAccountId,
+      toAddress: this.toAddress,
       type: this.type,
       status: this.status,
       amountUsdc: this.amountUsdc,
@@ -139,9 +144,9 @@ export class Transaction {
       exchangeRate: this.exchangeRate,
       feeUsdc: this.feeUsdc,
       feePlatform: this.feePlatform,
-      hederaTxId: this.hederaTxId,
-      hederaTxHash: this.hederaTxHash,
-      consensusTimestamp: this.consensusTimestamp,
+      txHash: this.txHash,
+      blockNumber: this.blockNumber,
+      gasUsed: this.gasUsed,
       description: this.description,
       metadata: this.metadata,
       errorMessage: this.errorMessage,
@@ -154,7 +159,7 @@ export class Transaction {
   static create(params: {
     fromUserId: string;
     toUserId?: string;
-    toAccountId?: string;
+    toAddress?: string;
     amount: { value: number; currency: string };
     type?: TransactionType;
     exchangeRate?: number;
@@ -168,7 +173,7 @@ export class Transaction {
       id: crypto.randomUUID(),
       fromUserId: params.fromUserId,
       toUserId: params.toUserId,
-      toAccountId: params.toAccountId,
+      toAddress: params.toAddress,
       type: params.type || TransactionType.Send,
       status: TransactionStatus.Pending,
       amountUsdc: params.amount.value,

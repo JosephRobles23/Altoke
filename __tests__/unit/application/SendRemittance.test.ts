@@ -6,8 +6,10 @@ describe('SendRemittanceUseCase', () => {
   let useCase: SendRemittanceUseCase;
   let mockTransactionRepo: ReturnType<typeof createMockTransactionRepo>;
   let mockWalletRepo: ReturnType<typeof createMockWalletRepo>;
-  let mockBlockchainClient: ReturnType<typeof createMockBlockchainClient>;
-  let mockNotificationService: ReturnType<typeof createMockNotificationService>;
+  let mockBlockchainService: ReturnType<typeof createMockBlockchainService>;
+  let mockNotificationService: ReturnType<
+    typeof createMockNotificationService
+  >;
   let mockEncryptionService: ReturnType<typeof createMockEncryptionService>;
 
   function createMockTransactionRepo() {
@@ -15,7 +17,7 @@ describe('SendRemittanceUseCase', () => {
       save: vi.fn(),
       findById: vi.fn(),
       findByUserId: vi.fn(),
-      findByHederaTxId: vi.fn(),
+      findByTxHash: vi.fn(),
       update: vi.fn(),
     };
   }
@@ -23,15 +25,16 @@ describe('SendRemittanceUseCase', () => {
   function createMockWalletRepo() {
     return {
       findByUserId: vi.fn(),
-      findByAccountId: vi.fn(),
+      findByAddress: vi.fn(),
       save: vi.fn(),
       updateBalance: vi.fn(),
     };
   }
 
-  function createMockBlockchainClient() {
+  function createMockBlockchainService() {
     return {
-      sendTransaction: vi.fn(),
+      transfer: vi.fn(),
+      getBalance: vi.fn(),
     };
   }
 
@@ -50,18 +53,17 @@ describe('SendRemittanceUseCase', () => {
   beforeEach(() => {
     mockTransactionRepo = createMockTransactionRepo();
     mockWalletRepo = createMockWalletRepo();
-    mockBlockchainClient = createMockBlockchainClient();
+    mockBlockchainService = createMockBlockchainService();
     mockNotificationService = createMockNotificationService();
     mockEncryptionService = createMockEncryptionService();
 
     useCase = new SendRemittanceUseCase(
       mockTransactionRepo,
       mockWalletRepo,
-      mockBlockchainClient,
+      mockBlockchainService,
       mockNotificationService,
       mockEncryptionService,
-      'test-master-password',
-      '0.0.12345'
+      'test-master-password'
     );
   });
 
@@ -69,49 +71,58 @@ describe('SendRemittanceUseCase', () => {
     const request = {
       fromUserId: 'user-1',
       toUserId: 'user-2',
-      toAccountId: '0.0.99999',
+      toAddress: '0x1234567890abcdef1234567890abcdef12345678',
       amount: { value: 50, currency: 'USDC' },
     };
 
     const mockWallet = {
       id: 'wallet-1',
-      accountId: '0.0.11111',
-      balance: { usdc: 100, hbar: 10 },
+      address: '0xabcdef1234567890abcdef1234567890abcdef12',
+      balance: { usdc: 100, eth: 0.01 },
       privateKeyEncrypted: 'encrypted-key',
       hasEnoughBalance: () => true,
     };
 
     mockWalletRepo.findByUserId.mockResolvedValue(mockWallet);
-    mockEncryptionService.decryptPrivateKey.mockReturnValue('decrypted-key');
-    mockBlockchainClient.sendTransaction.mockResolvedValue('0xTxHash123');
+    mockEncryptionService.decryptPrivateKey.mockReturnValue('0xdecrypted-key');
+    mockBlockchainService.transfer.mockResolvedValue({
+      txHash: '0xTxHash123',
+      blockNumber: BigInt(12345),
+      gasUsed: BigInt(21000),
+    });
+    mockBlockchainService.getBalance.mockResolvedValue(50);
 
     const result = await useCase.execute(request);
 
     expect(result.txHash).toBe('0xTxHash123');
     expect(mockTransactionRepo.save).toHaveBeenCalledTimes(1);
     expect(mockTransactionRepo.update).toHaveBeenCalledTimes(1);
-    expect(mockBlockchainClient.sendTransaction).toHaveBeenCalled();
-    expect(mockNotificationService.sendTransactionNotification).toHaveBeenCalled();
+    expect(mockBlockchainService.transfer).toHaveBeenCalled();
+    expect(
+      mockNotificationService.sendTransactionNotification
+    ).toHaveBeenCalled();
   });
 
   it('should throw InsufficientFundsError when balance is low', async () => {
     const request = {
       fromUserId: 'user-1',
       toUserId: 'user-2',
-      toAccountId: '0.0.99999',
+      toAddress: '0x1234567890abcdef1234567890abcdef12345678',
       amount: { value: 150, currency: 'USDC' },
     };
 
     const mockWallet = {
       id: 'wallet-1',
-      accountId: '0.0.11111',
-      balance: { usdc: 100, hbar: 10 },
+      address: '0xabcdef1234567890abcdef1234567890abcdef12',
+      balance: { usdc: 100, eth: 0.01 },
       privateKeyEncrypted: 'encrypted-key',
       hasEnoughBalance: () => false,
     };
 
     mockWalletRepo.findByUserId.mockResolvedValue(mockWallet);
 
-    await expect(useCase.execute(request)).rejects.toThrow(InsufficientFundsError);
+    await expect(useCase.execute(request)).rejects.toThrow(
+      InsufficientFundsError
+    );
   });
 });

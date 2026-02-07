@@ -5,24 +5,21 @@ const PROTECTED_ROUTES = ['/dashboard', '/send', '/transactions', '/buy', '/sell
 const AUTH_ROUTES = ['/login', '/signup'];
 
 export async function middleware(request: NextRequest) {
-  // Actualizar sesión de Supabase
-  const response = await updateSession(request);
+  // Actualizar sesión de Supabase y obtener usuario
+  const { response, user } = await updateSession(request);
 
   const { pathname } = request.nextUrl;
-
-  // TODO: Verificar autenticación real con Supabase
-  // Por ahora, permitir acceso a todas las rutas para desarrollo
-  // const isAuthenticated = await checkAuth(request);
+  const isAuthenticated = !!user;
 
   // Redirigir usuarios autenticados fuera de rutas de auth
-  // if (AUTH_ROUTES.some(route => pathname.startsWith(route)) && isAuthenticated) {
-  //   return NextResponse.redirect(new URL('/dashboard', request.url));
-  // }
+  if (AUTH_ROUTES.some(route => pathname.startsWith(route)) && isAuthenticated) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
 
   // Redirigir usuarios no autenticados a login
-  // if (PROTECTED_ROUTES.some(route => pathname.startsWith(route)) && !isAuthenticated) {
-  //   return NextResponse.redirect(new URL('/login', request.url));
-  // }
+  if (PROTECTED_ROUTES.some(route => pathname.startsWith(route)) && !isAuthenticated) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
 
   return response;
 }

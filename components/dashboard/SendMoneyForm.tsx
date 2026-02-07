@@ -8,21 +8,29 @@ import { FormField } from '@/components/ui/form';
 import { sendRemittance } from '@/app/actions/transaction';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { useExchangeRate } from '@/hooks/useExchangeRate';
+import { ExternalLink } from 'lucide-react';
+
+const EXPLORER_BASE_URL =
+  process.env.NEXT_PUBLIC_BASESCAN_URL || 'https://sepolia.basescan.org';
 
 export function SendMoneyForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [success, setSuccess] = useState<{
+    txHash: string;
+    explorerUrl: string;
+  } | null>(null);
   const [amount, setAmount] = useState('');
 
   const { rate, isLoading: rateLoading } = useExchangeRate('USD', 'PEN');
 
-  const amountPEN = rate && amount ? (parseFloat(amount) * rate).toFixed(2) : '0.00';
+  const amountPEN =
+    rate && amount ? (parseFloat(amount) * rate).toFixed(2) : '0.00';
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true);
     setError(null);
-    setSuccess(false);
+    setSuccess(null);
 
     try {
       const result = await sendRemittance(formData);
@@ -32,7 +40,10 @@ export function SendMoneyForm() {
         return;
       }
 
-      setSuccess(true);
+      setSuccess({
+        txHash: result.data?.txHash as string,
+        explorerUrl: result.data?.explorerUrl as string,
+      });
       setAmount('');
     } catch {
       setError('Error inesperado. Intenta de nuevo.');
@@ -56,16 +67,27 @@ export function SendMoneyForm() {
 
           {success && (
             <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
-              Transacción enviada exitosamente
+              <p>Transacción enviada exitosamente</p>
+              <a
+                href={success.explorerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 flex items-center gap-1 text-xs underline"
+              >
+                Ver en BaseScan{' '}
+                <ExternalLink className="h-3 w-3" />
+              </a>
             </div>
           )}
 
-          <FormField label="Account ID del Destinatario" htmlFor="toAccountId">
+          <FormField label="Dirección del Destinatario" htmlFor="toAddress">
             <Input
-              id="toAccountId"
-              name="toAccountId"
+              id="toAddress"
+              name="toAddress"
               type="text"
-              placeholder="0.0.xxxxx"
+              placeholder="0x..."
+              pattern="^0x[a-fA-F0-9]{40}$"
+              title="Dirección EVM válida (0x seguido de 40 caracteres hex)"
               required
               disabled={isLoading}
             />
@@ -92,12 +114,18 @@ export function SendMoneyForm() {
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Tipo de cambio:</span>
               <span className="font-medium">
-                {rateLoading ? 'Cargando...' : `1 USD = ${rate?.toFixed(4) || '--'} PEN`}
+                {rateLoading
+                  ? 'Cargando...'
+                  : `1 USD = ${rate?.toFixed(4) || '--'} PEN`}
               </span>
             </div>
             <div className="mt-2 flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">El destinatario recibe:</span>
-              <span className="text-lg font-bold text-primary">S/ {amountPEN}</span>
+              <span className="text-muted-foreground">
+                El destinatario recibe:
+              </span>
+              <span className="text-lg font-bold text-primary">
+                S/ {amountPEN}
+              </span>
             </div>
           </div>
 

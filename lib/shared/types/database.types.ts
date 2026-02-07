@@ -3,7 +3,13 @@
  * TODO: Regenerar con `npx supabase gen types typescript`
  */
 
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
 
 export interface Database {
   public: {
@@ -49,10 +55,9 @@ export interface Database {
         Row: {
           id: string;
           user_id: string;
-          account_id: string;
-          public_key: string;
+          address: string;
           private_key_encrypted: string;
-          balance_hbar: number;
+          balance_eth: number;
           balance_usdc: number;
           is_active: boolean;
           network: string;
@@ -62,10 +67,9 @@ export interface Database {
         Insert: {
           id?: string;
           user_id: string;
-          account_id: string;
-          public_key: string;
+          address: string;
           private_key_encrypted: string;
-          balance_hbar?: number;
+          balance_eth?: number;
           balance_usdc?: number;
           is_active?: boolean;
           network?: string;
@@ -74,10 +78,9 @@ export interface Database {
         };
         Update: {
           user_id?: string;
-          account_id?: string;
-          public_key?: string;
+          address?: string;
           private_key_encrypted?: string;
-          balance_hbar?: number;
+          balance_eth?: number;
           balance_usdc?: number;
           is_active?: boolean;
           network?: string;
@@ -89,7 +92,7 @@ export interface Database {
           id: string;
           from_user_id: string;
           to_user_id: string | null;
-          to_account_id: string | null;
+          to_address: string | null;
           type: string;
           status: string;
           amount_usdc: number;
@@ -97,9 +100,9 @@ export interface Database {
           exchange_rate: number | null;
           fee_usdc: number;
           fee_platform: number;
-          hedera_tx_id: string | null;
-          hedera_tx_hash: string | null;
-          consensus_timestamp: string | null;
+          tx_hash: string | null;
+          block_number: number | null;
+          gas_used: number | null;
           description: string | null;
           metadata: Json | null;
           error_message: string | null;
@@ -111,7 +114,7 @@ export interface Database {
           id?: string;
           from_user_id: string;
           to_user_id?: string | null;
-          to_account_id?: string | null;
+          to_address?: string | null;
           type: string;
           status?: string;
           amount_usdc: number;
@@ -119,9 +122,9 @@ export interface Database {
           exchange_rate?: number | null;
           fee_usdc?: number;
           fee_platform?: number;
-          hedera_tx_id?: string | null;
-          hedera_tx_hash?: string | null;
-          consensus_timestamp?: string | null;
+          tx_hash?: string | null;
+          block_number?: number | null;
+          gas_used?: number | null;
           description?: string | null;
           metadata?: Json | null;
           error_message?: string | null;
@@ -132,7 +135,7 @@ export interface Database {
         Update: {
           from_user_id?: string;
           to_user_id?: string | null;
-          to_account_id?: string | null;
+          to_address?: string | null;
           type?: string;
           status?: string;
           amount_usdc?: number;
@@ -140,9 +143,9 @@ export interface Database {
           exchange_rate?: number | null;
           fee_usdc?: number;
           fee_platform?: number;
-          hedera_tx_id?: string | null;
-          hedera_tx_hash?: string | null;
-          consensus_timestamp?: string | null;
+          tx_hash?: string | null;
+          block_number?: number | null;
+          gas_used?: number | null;
           description?: string | null;
           metadata?: Json | null;
           error_message?: string | null;

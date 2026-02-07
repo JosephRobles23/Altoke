@@ -1,40 +1,19 @@
-import { IWalletRepository } from '@/lib/domain/repositories/IWalletRepository';
-
-export interface ITokenService {
-  associateToken(accountId: string, privateKey: string, tokenId: string): Promise<void>;
-}
-
-export interface IEncryptionDecryptService {
-  decryptPrivateKey(encryptedData: string, masterPassword: string): string;
-}
-
-export interface AssociateTokenRequest {
-  userId: string;
-  tokenId: string;
-}
-
+/**
+ * AssociateToken use case - NO APLICA EN EVM/BASE
+ *
+ * En EVM (Base), no es necesario asociar tokens explícitamente.
+ * Los tokens ERC-20 como USDC se pueden recibir en cualquier dirección
+ * sin necesidad de un paso previo de asociación.
+ *
+ * Este archivo se mantiene como documentación del cambio de arquitectura.
+ *
+ * @deprecated No es necesario en arquitectura Base/EVM
+ */
 export class AssociateTokenUseCase {
-  constructor(
-    private walletRepo: IWalletRepository,
-    private tokenService: ITokenService,
-    private encryptionService: IEncryptionDecryptService,
-    private masterPassword: string
-  ) {}
-
-  async execute(request: AssociateTokenRequest): Promise<void> {
-    // 1. Obtener wallet del usuario
-    const wallet = await this.walletRepo.findByUserId(request.userId);
-    if (!wallet || !wallet.privateKeyEncrypted) {
-      throw new Error('Wallet not found or no private key');
-    }
-
-    // 2. Desencriptar private key
-    const privateKey = this.encryptionService.decryptPrivateKey(
-      wallet.privateKeyEncrypted,
-      this.masterPassword
+  async execute(): Promise<void> {
+    throw new Error(
+      'AssociateToken no es necesario en EVM/Base. ' +
+        'Los tokens ERC-20 se pueden recibir sin asociación previa.'
     );
-
-    // 3. Asociar token en Hedera
-    await this.tokenService.associateToken(wallet.accountId, privateKey, request.tokenId);
   }
 }

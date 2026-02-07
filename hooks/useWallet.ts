@@ -4,9 +4,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { getBalance } from '@/app/actions/wallet';
 
 interface WalletState {
-  accountId: string | null;
-  balanceHbar: number;
+  address: string | null;
+  balanceEth: number;
   balanceUsdc: number;
+  network: string | null;
   isLoading: boolean;
   error: string | null;
 }
@@ -14,31 +15,28 @@ interface WalletState {
 /**
  * Hook para gestión del wallet
  */
-export function useWallet(walletId?: string) {
+export function useWallet() {
   const [state, setState] = useState<WalletState>({
-    accountId: null,
-    balanceHbar: 0,
+    address: null,
+    balanceEth: 0,
     balanceUsdc: 0,
+    network: null,
     isLoading: true,
     error: null,
   });
 
   const fetchBalance = useCallback(async () => {
-    if (!walletId) {
-      setState((prev) => ({ ...prev, isLoading: false }));
-      return;
-    }
-
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const result = await getBalance(walletId);
+      const result = await getBalance();
 
       if (result.success && result.data) {
         setState({
-          accountId: null, // TODO: obtener del resultado
-          balanceHbar: (result.data.hbar as number) || 0,
+          address: (result.data.address as string) || null,
+          balanceEth: (result.data.eth as number) || 0,
           balanceUsdc: (result.data.usdc as number) || 0,
+          network: (result.data.network as string) || null,
           isLoading: false,
           error: null,
         });
@@ -49,14 +47,14 @@ export function useWallet(walletId?: string) {
           error: result.error || 'Error al obtener balance',
         }));
       }
-    } catch (error) {
+    } catch {
       setState((prev) => ({
         ...prev,
         isLoading: false,
         error: 'Error inesperado al obtener balance',
       }));
     }
-  }, [walletId]);
+  }, []);
 
   useEffect(() => {
     fetchBalance();

@@ -30,10 +30,10 @@ export function formatUSDC(amount: number): string {
 }
 
 /**
- * Formatea un monto de HBAR
+ * Formatea un monto de ETH
  */
-export function formatHBAR(amount: number): string {
-  return `${amount.toFixed(4)} HBAR`;
+export function formatETH(amount: number): string {
+  return `${amount.toFixed(6)} ETH`;
 }
 
 /**
@@ -63,9 +63,12 @@ export function formatDateTime(date: Date | string): string {
 }
 
 /**
- * Trunca un Account ID o hash para visualización
+ * Trunca una dirección EVM o hash para visualización
  */
-export function truncateAddress(address: string, chars: number = 6): string {
+export function truncateAddress(
+  address: string,
+  chars: number = 6
+): string {
   if (address.length <= chars * 2 + 3) return address;
   return `${address.slice(0, chars)}...${address.slice(-chars)}`;
 }

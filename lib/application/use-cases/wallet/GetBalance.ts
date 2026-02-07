@@ -7,7 +7,7 @@ export interface GetBalanceRequest {
 }
 
 export interface GetBalanceResponse {
-  accountId: string;
+  address: string;
   balance: Balance;
 }
 
@@ -21,10 +21,10 @@ export class GetBalanceUseCase {
       throw new ValidationError('Wallet not found for user');
     }
 
-    // TODO: Opcionalmente sincronizar con Hedera para obtener balance actualizado
+    // TODO: Opcionalmente sincronizar con Base para obtener balance actualizado on-chain
 
     return {
-      accountId: wallet.accountId,
+      address: wallet.address,
       balance: wallet.balance,
     };
   }
