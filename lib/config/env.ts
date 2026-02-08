@@ -21,10 +21,12 @@ const envSchema = z.object({
     .optional(),
   NEXT_PUBLIC_BASESCAN_URL: z.string().url().optional(),
 
-  // Coinbase Developer Platform (CDP)
-  NEXT_PUBLIC_CDP_PROJECT_ID: z.string().optional(),
-  CDP_API_KEY_NAME: z.string().optional(),
-  CDP_API_KEY_SECRET: z.string().optional(),
+  // TransFi — On/Off-Ramp Widget + KYC (via Widget)
+  TRANSFI_API_KEY: z.string().min(1),
+  TRANSFI_API_SECRET: z.string().optional(), // Solo para Single Integrated API (si se habilita)
+  NEXT_PUBLIC_TRANSFI_WIDGET_URL: z.string().url().default('https://sandbox-buy.transfi.com'),
+  TRANSFI_API_URL: z.string().url().optional(), // Solo para Single Integrated API (si se habilita)
+  TRANSFI_WEBHOOK_SECRET: z.string().optional(),
 
   // Encryption
   ENCRYPTION_MASTER_PASSWORD: z.string().min(32),

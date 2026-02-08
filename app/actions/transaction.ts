@@ -75,7 +75,7 @@ export async function sendRemittance(
     if (!profile || profile.kyc_level === 0) {
       return {
         success: false,
-        error: 'Necesitas verificar tu identidad antes de enviar remesas. Compra USDC para verificarte.',
+        error: 'Necesitas verificar tu identidad con TransFi antes de enviar remesas. Ve a tu dashboard y completa el KYC.',
       };
     }
 

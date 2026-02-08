@@ -4,7 +4,7 @@
 
 export const APP_CONFIG = {
   name: 'Altoke',
-  description: 'Plataforma de remesas USD → PEN con Base (Coinbase L2)',
+  description: 'Plataforma de remesas USD → PEN con Base (L2) y TransFi',
   version: '0.1.0',
   url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
 } as const;

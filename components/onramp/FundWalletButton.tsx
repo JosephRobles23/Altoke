@@ -6,6 +6,10 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { generateOnrampURL } from '@/app/actions/onramp';
 import { Plus } from 'lucide-react';
 
+/**
+ * Botón rápido para fondear wallet vía TransFi On-Ramp.
+ * Abre el widget de TransFi en una ventana popup.
+ */
 export function FundWalletButton() {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -19,15 +23,15 @@ export function FundWalletButton() {
         const url = result.data.url as string;
         const popup = window.open(
           url,
-          'coinbase-onramp',
-          'width=460,height=720,menubar=no,toolbar=no'
+          'transfi-onramp',
+          'width=500,height=750,menubar=no,toolbar=no'
         );
         if (!popup) {
           window.open(url, '_blank');
         }
       }
     } catch {
-      // Silently handle - the buy page has better error handling
+      // Silently handle - la página de compra tiene mejor manejo de errores
     } finally {
       setIsLoading(false);
     }

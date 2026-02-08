@@ -1,8 +1,9 @@
 'use client';
 
-import Link from 'next/link';
-import { Shield, ShieldAlert, ShieldCheck, ChevronRight } from 'lucide-react';
+import { useState } from 'react';
+import { Shield, ShieldAlert, ShieldCheck, ChevronRight, Loader2 } from 'lucide-react';
 import { KYC_LEVELS } from '@/lib/shared/constants';
+import { initiateTransFiKYC } from '@/app/actions/onramp';
 
 interface KycStatusBadgeProps {
   kycStatus: 'pending' | 'in_review' | 'approved' | 'rejected';
@@ -36,12 +37,57 @@ const statusConfig = {
   },
 } as const;
 
+/**
+ * Badge de estado KYC integrado con TransFi.
+ *
+ * Cuando el usuario no está verificado, permite iniciar el flujo de KYC
+ * directamente con TransFi (via Sumsub), que abre en una nueva ventana.
+ *
+ * Niveles KYC de TransFi:
+ * - Nivel 0 (Basic): Datos básicos (nombre, DOB, país, email, teléfono)
+ * - Nivel 1 (Standard): ID, selfie, dirección, teléfono
+ * - Nivel 2 (Enhanced): Prueba de origen de fondos, dirección
+ */
 export function KycStatusBadge({ kycStatus, kycLevel }: KycStatusBadgeProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const config = statusConfig[kycStatus];
   const Icon = config.icon;
   const levelInfo = KYC_LEVELS[kycLevel as keyof typeof KYC_LEVELS];
 
-  // Si no está verificado, mostrar CTA para verificarse
+  const handleStartKYC = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const result = await initiateTransFiKYC();
+
+      if (!result.success) {
+        setError(result.error || 'Error al iniciar verificación');
+        return;
+      }
+
+      const kycUrl = result.data?.kycUrl as string;
+      if (kycUrl) {
+        // Abrir el widget de KYC de TransFi en nueva ventana
+        const popup = window.open(
+          kycUrl,
+          'transfi-kyc',
+          'width=500,height=750,menubar=no,toolbar=no'
+        );
+        if (!popup) {
+          window.open(kycUrl, '_blank');
+        }
+      }
+    } catch {
+      setError('Error inesperado. Intenta de nuevo.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Si no está verificado, mostrar CTA para verificarse con TransFi KYC
   if (kycStatus === 'pending' && kycLevel === 0) {
     return (
       <div className={`rounded-lg border p-4 ${config.colorClass}`}>
@@ -51,18 +97,28 @@ export function KycStatusBadge({ kycStatus, kycLevel }: KycStatusBadgeProps) {
             <div>
               <p className="font-medium">Identidad no verificada</p>
               <p className="text-sm opacity-80">
-                Verifica tu identidad comprando USDC para poder enviar remesas.
+                Completa tu verificación para poder comprar, vender y enviar USDC.
               </p>
             </div>
           </div>
-          <Link
-            href="/buy"
-            className="flex items-center gap-1 rounded-md bg-yellow-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-yellow-700"
+          <button
+            onClick={handleStartKYC}
+            disabled={isLoading}
+            className="flex items-center gap-1 rounded-md bg-yellow-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-yellow-700 disabled:opacity-50"
           >
-            Verificar
-            <ChevronRight className="h-4 w-4" />
-          </Link>
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                Verificar KYC
+                <ChevronRight className="h-4 w-4" />
+              </>
+            )}
+          </button>
         </div>
+        {error && (
+          <p className="mt-2 text-sm text-red-600">{error}</p>
+        )}
       </div>
     );
   }
@@ -85,7 +141,7 @@ export function KycStatusBadge({ kycStatus, kycLevel }: KycStatusBadgeProps) {
             {kycStatus === 'approved'
               ? `${levelInfo?.label || 'Verificado'} — Transferencias hasta $${levelInfo?.maxTransfer?.toLocaleString() || '0'} USD`
               : kycStatus === 'in_review'
-                ? 'Tu verificación está siendo procesada.'
+                ? 'Tu verificación con TransFi está siendo procesada.'
                 : 'Tu verificación fue rechazada. Contacta soporte.'}
           </p>
         </div>

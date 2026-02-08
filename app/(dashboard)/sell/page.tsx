@@ -21,7 +21,7 @@ export default async function SellPage() {
       <div>
         <h1 className="text-3xl font-bold">Vender USDC</h1>
         <p className="text-muted-foreground">
-          Convierte tus USDC a USD a través de Coinbase
+          Convierte tus USDC a moneda local a través de TransFi
         </p>
       </div>
 

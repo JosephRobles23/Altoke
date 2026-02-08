@@ -16,12 +16,15 @@ export const TRANSACTION_LIMITS = {
   MIN_FEE_USDC: 0.01,
 } as const;
 
-// KYC
+// KYC — Niveles de TransFi
+// Nivel 0 (Basic): Datos básicos del usuario (nombre, DOB, país, email, teléfono)
+// Nivel 1 (Standard): ID, selfie, dirección, teléfono — via /kyc/standard
+// Nivel 2 (Enhanced): Prueba de origen de fondos, dirección — via /kyc/advanced
+// Ref: https://docs.transfi.com/docs/kyc-levels
 export const KYC_LEVELS = {
   0: { label: 'Sin verificar', maxTransfer: 0 },
-  1: { label: 'Básico', maxTransfer: 500 },
-  2: { label: 'Intermedio', maxTransfer: 5000 },
-  3: { label: 'Avanzado', maxTransfer: 10000 },
+  1: { label: 'Estándar (TransFi)', maxTransfer: 1000 },
+  2: { label: 'Avanzado (TransFi)', maxTransfer: 10000 },
 } as const;
 
 // Monedas soportadas

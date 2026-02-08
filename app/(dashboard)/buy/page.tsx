@@ -14,7 +14,7 @@ export default async function BuyPage() {
       <div>
         <h1 className="text-3xl font-bold">Comprar USDC</h1>
         <p className="text-muted-foreground">
-          Compra USDC con tarjeta de crédito/débito a través de Coinbase
+          Compra USDC con múltiples métodos de pago a través de TransFi
         </p>
       </div>
 

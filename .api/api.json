@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "apis": [
+    {
+      "identifier": "transfi-docs",
+      "source": "@transfi-docs/v1.0#1s9by8qml7sfxl0",
+      "integrity": "sha512-CJPqiWBeSmeg30zjaFEuDfwcmTOMezpPy08ejeGrz0vNXxkEo7KYYGpNxf7R8iSx8ICaMFGCnUh5vb0OQuZ8SA==",
+      "installerVersion": "6.1.3"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 -- ============================================
 -- ALTOKE MVP - Migración inicial
--- Arquitectura: Base (Coinbase L2) + Coinbase CDP
+-- Arquitectura: Base (L2) + TransFi On/Off-Ramp + KYC
 -- ============================================
 
 -- PROFILES TABLE
@@ -72,7 +72,7 @@ CREATE TABLE public.onramp_transactions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id),
   wallet_id UUID REFERENCES public.wallets(id),
-  provider TEXT NOT NULL DEFAULT 'coinbase' CHECK (provider IN ('coinbase')),
+  provider TEXT NOT NULL DEFAULT 'transfi' CHECK (provider IN ('transfi')),
   provider_order_id TEXT,
   provider_tx_id TEXT,
   
